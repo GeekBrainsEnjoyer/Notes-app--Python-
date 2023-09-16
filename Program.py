@@ -12,33 +12,31 @@ def main(file_name):
         print('1 - показать заметки')
         print('2 - добавить новую заметку')
         print('3 - выйти')
-        user_input = int(input())
+        user_input = input()
 
-        if user_input == 1:
+        if user_input == '1':
             try:
                 read(file_name)
-                user_input = int(
-                    input("1 - изменить файл\n3 - выйти в меню\n"))
+                user_input = input(
+                    "1 - изменить заметку\n2 - удалить заметку\nЛюбую другую калавишу - выйти в меню\n")
 
-                if user_input == 1:
+                if user_input == '1':
                     change(file_name)
-                    input()
+                elif user_input == '2':
+                    delete(file_name)
 
             except:
-                user_input = int(
-                    input("Пока что нет ниодно заметки.\nХотите добавить нажмите - 1.\nВернуться в меню - любую клавишу.\n"))
-                if user_input == 1:
-                    add(file_name)
+                input(
+                    "Пока что нет ниодно заметки.\nВернуться в меню - любую клавишу.\n")
 
-        elif user_input == 2:
+        elif user_input == '2':
             add(file_name)
-            print("\n")
-        elif user_input == 3:
+        elif user_input == '3':
             print('Завершение работы.')
             working = False
         else:
-            print('Некорректная команда!')
-            print("\n")
+            input('Некорректная команда!')
+            
 
 
 def read(file_name):
@@ -84,6 +82,7 @@ def change(file_name):
 
     with open(file_name, 'r') as file_read:
         data = json.load(file_read)
+
     try:
         for note in data:
             if note["head"] == target:
@@ -91,12 +90,12 @@ def change(file_name):
                 print("1 - заголовок")
                 print("2 - текст заметки")
 
-                user_сhoice = int(input())
+                user_сhoice = input()
                 changed_note = input("Введите новую информацию: ")
 
-                if user_сhoice == 1:
+                if user_сhoice == '1':
                     note["head"] = changed_note
-                elif user_сhoice == 2:
+                elif user_сhoice == '2':
                     note["body"] = changed_note
                 else:
                     print("Такой команды нет.")
@@ -115,26 +114,14 @@ def change(file_name):
 
 
 def delete(file_name):
-    os.system("CLS")
-    target = input("Input the target: ")
+    target = input("Введите заголовок заметки, которую хотите удалить.\n")
 
-    with open(file_name, 'r+') as file:
-        data = file.readlines()
+    with open(file_name, 'r') as read_file:
+        data = json.load(read_file)
 
-        for contact in range(len(data)):
-            if target in data[contact]:
-                print(data[contact])
-                userChoice = input("Delete contact?(Y/N): ").lower()
-                if userChoice == "y":
-                    print(f"Contact {data[contact]}deleted.")
-                    data[contact] = ""
+    data_without_target = list(filter(lambda i: i['head'] != target, data))
 
-                break
-        else:
-            print("sorry, not found")
+    with open(file_name, 'w') as write_file:
+        json.dump(data_without_target, write_file)
 
-    data = list(filter(None, data))
-    with open(file_name, 'w') as file:
-        file.writelines(data)
-
-    input("press any key")
+    input("Заметка удалена. Нажмите любую клавишу.")
