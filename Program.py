@@ -15,19 +15,18 @@ def main(file_name):
         user_input = input()
 
         if user_input == '1':
-            try:
-                read(file_name)
+            is_read_not_create_file = read(file_name)
+
+            if is_read_not_create_file:
                 user_input = input(
-                    "1 - изменить заметку\n2 - удалить заметку\nЛюбую другую калавишу - выйти в меню\n")
+                    "1 - изменить заметку\n2 - удалить заметку\n3 - отфильтровать по дате\nЛюбую другую калавишу - выйти в меню\n")
 
                 if user_input == '1':
                     change(file_name)
                 elif user_input == '2':
                     delete(file_name)
-
-            except:
-                input(
-                    "Пока что нет ниодно заметки.\nВернуться в меню - любую клавишу.\n")
+                elif user_input == '3':
+                    date_filter(file_name)
 
         elif user_input == '2':
             add(file_name)
@@ -36,18 +35,30 @@ def main(file_name):
             working = False
         else:
             input('Некорректная команда!')
-            
 
 
 def read(file_name):
-    with open(file_name, 'r') as read_file:
-        notes = json.load(read_file)
+    try:
+        with open(file_name, 'r') as read_file:
+            notes = json.load(read_file)
 
-    for note in notes:
-        print(note["date"])
-        print("  " + str(note["head"]))
-        print("  " + str(note["body"]))
-        print('\n')
+        if bool(notes):
+            for note in notes:
+                print(note["date"])
+                print(note["time"])
+                print("  " + str(note["head"]))
+                print("  " + str(note["body"]))
+                print('\n')
+            return True
+        else:
+            input("Пока нет ниодной заметки. Нажмите любую клавишу.")
+            return False
+
+    except:
+        with open(file_name, 'w') as write_file:
+            json.dump(list(), write_file)
+        input("Пока нет ниодной заметки. Нажмите любую клавишу.")
+        return False
 
 
 def add(file_name):
@@ -61,7 +72,8 @@ def add(file_name):
 
     try:
         note_dict = dict(id=str(uuid.uuid4()),
-                         date=str(datetime.datetime.now()),
+                         date=datetime.datetime.now().strftime('%y/%m/%d'),
+                         time=datetime.datetime.now().strftime('%H:%M:%S'),
                          head=input("Введите заголовок: "),
                          body=input("Введите текст заметки: "))
 
@@ -100,7 +112,8 @@ def change(file_name):
                 else:
                     print("Такой команды нет.")
 
-                note["date"] = str(datetime.datetime.now())
+                note["date"] = datetime.datetime.now().strftime('%y/%m/%d'),
+                note["time"] = datetime.datetime.now().strftime('%H:%M:%S'),
             else:
                 print("Такой заметки не найдено.")
 
@@ -125,3 +138,37 @@ def delete(file_name):
         json.dump(data_without_target, write_file)
 
     input("Заметка удалена. Нажмите любую клавишу.")
+
+
+def date_filter(file_name):
+    with open(file_name, 'r') as read_file:
+        data = json.load(read_file)
+
+    print("Отфильтровать от: ")
+    try:
+        date_start = datetime.datetime(int(input("Год: ")), int(
+            input("Месяц: ")), int(input("Число: ")))
+
+        print("До: ")
+        date_end = datetime.datetime(int(input("Год: ")), int(
+            input("Месяц: ")), int(input("Число: ")))
+    except:
+        input("Ошибка! Некправильный формат даты. Попробуйте снова.")
+
+    temp_data = list(
+        filter(lambda i: datetime.datetime.strptime(i['date'], '%y/%m/%d') >= date_start, data))
+
+    temp_data = list(
+        filter(lambda i: datetime.datetime.strptime(i['date'], '%y/%m/%d') <= date_end, data))
+
+    if not temp_data:
+        print("Заметок в этот период нет.")
+    else:
+        for note in temp_data:
+            print(note["date"])
+            print(note["time"])
+            print("  " + str(note["head"]))
+            print("  " + str(note["body"]))
+            print('\n')
+
+    input("Нажмите любую клавишу.")
